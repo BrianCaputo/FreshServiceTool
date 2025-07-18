@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>24d3f274-266c-4855-8936-6144964175e2</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0-preview.6.25358.103" />
+    <PackageReference Include="Microsoft.Graph" Version="5.86.0" />
+    <PackageReference Include="Microsoft.Graph.Core" Version="3.2.4" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Google" Version="1.60.0-alpha" />
+    <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.60.0" />
+  </ItemGroup>
+
+</Project>
