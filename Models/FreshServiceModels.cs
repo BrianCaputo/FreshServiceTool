@@ -1,33 +1,22 @@
-﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace RAG2_Gemini.Models
 {
-    // Data models for FreshService API response
+    public class FreshServiceSettings
+    {
+        public string ApiKey { get; set; } = string.Empty;
+        public string Domain { get; set; } = string.Empty;
+    }
+
+    public class GeminiSettings
+    {
+        public string Gemini { get; set; } = string.Empty;
+    }
+
     public class FreshServiceGroupResponse
     {
         [JsonPropertyName("groups")]
         public List<FreshServiceGroup> Groups { get; set; } = new();
-    }
-
-    public class Ticket
-    {
-        [JsonPropertyName("ID")] // Maps JSON "TicketID" to C# TicketId
-        public long ID { get; set; }
-
-        [JsonPropertyName("Similarity_Score")] // Maps JSON "Similarity Score" to C# SimilarityScore
-        public int SimilarityScore { get; set; }
-
-        [JsonPropertyName("Reason")] // Maps JSON "Reason" to C# Reason
-        public string Reason { get; set; }
-
-        [JsonPropertyName("RequesterID")] // Maps JSON "Subject" to C# Subject
-        public long UserID { get; set; }
     }
 
     public class FreshServiceGroup
@@ -63,7 +52,7 @@ namespace RAG2_Gemini.Models
         public string DescriptionText { get; set; } = string.Empty;
 
         [JsonPropertyName("requester_id")]
-        public long RequesterID { get; set; }
+        public long RequesterId { get; set; }
 
         [JsonPropertyName("status")]
         public int Status { get; set; }
@@ -75,29 +64,26 @@ namespace RAG2_Gemini.Models
         public long? GroupId { get; set; }
 
         [JsonPropertyName("type")]
-        public string Type { get; set; }
-
-        public string GroupName { get; set; } = string.Empty; // You may need to map this from group_id
+        public string Type { get; set; } = string.Empty;
 
         [JsonPropertyName("created_at")]
         public DateTime? CreatedAt { get; set; }
 
         [JsonPropertyName("updated_at")]
-        public DateTime? Updated { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+
+        public string GroupName { get; set; } = string.Empty;
     }
 
     public class ConversationsResponse
     {
         [JsonPropertyName("conversations")]
-        public List<Conversation> Conversations { get; set; }
+        public List<Conversation> Conversations { get; set; } = new();
 
         [JsonPropertyName("meta")]
-        public Meta Meta { get; set; }
+        public Meta Meta { get; set; } = new();
     }
 
-    /// <summary>
-    /// Represents a single conversation entry within a ticket.
-    /// </summary>
     public class Conversation
     {
         [JsonPropertyName("id")]
@@ -107,16 +93,16 @@ namespace RAG2_Gemini.Models
         public long UserId { get; set; }
 
         [JsonPropertyName("to_emails")]
-        public List<string> ToEmails { get; set; }
+        public List<string> ToEmails { get; set; } = new();
 
         [JsonPropertyName("body")]
-        public string Body { get; set; }
+        public string Body { get; set; } = string.Empty;
 
         [JsonPropertyName("body_text")]
-        public string BodyText { get; set; }
+        public string BodyText { get; set; } = string.Empty;
 
         [JsonPropertyName("ticket_id")]
-        public int TicketId { get; set; }
+        public long TicketId { get; set; }
 
         [JsonPropertyName("created_at")]
         public DateTime CreatedAt { get; set; }
@@ -131,30 +117,24 @@ namespace RAG2_Gemini.Models
         public bool Private { get; set; }
 
         [JsonPropertyName("support_email")]
-        public string SupportEmail { get; set; }
+        public string SupportEmail { get; set; } = string.Empty;
 
         [JsonPropertyName("source")]
         public int Source { get; set; }
 
         [JsonPropertyName("from_email")]
-        public string FromEmail { get; set; }
+        public string FromEmail { get; set; } = string.Empty;
 
         [JsonPropertyName("cc_emails")]
-        public List<string> CcEmails { get; set; }
+        public List<string> CcEmails { get; set; } = new();
 
-        // Note: bcc_emails can sometimes be null, so we handle that by not making it a required field.
         [JsonPropertyName("bcc_emails")]
-        public List<string> BccEmails { get; set; }
+        public List<string> BccEmails { get; set; } = new();
 
-        // Attachments are likely more complex objects, but are an empty array in the example.
-        // For now, we can represent them as a list of objects.
         [JsonPropertyName("attachments")]
-        public List<object> Attachments { get; set; }
+        public List<object> Attachments { get; set; } = new();
     }
 
-    /// <summary>
-    /// Represents the metadata object that provides information about the result set.
-    /// </summary>
     public class Meta
     {
         [JsonPropertyName("count")]
@@ -162,5 +142,29 @@ namespace RAG2_Gemini.Models
 
         [JsonPropertyName("has_more")]
         public bool HasMore { get; set; }
+    }
+
+    public class RelevantTicket
+    {
+        [JsonPropertyName("ID")]
+        public long Id { get; set; }
+
+        [JsonPropertyName("RequesterID")]
+        public long RequesterId { get; set; }
+
+        [JsonPropertyName("Similarity_Score")]
+        public int SimilarityScore { get; set; }
+
+        [JsonPropertyName("Reason")]
+        public string Reason { get; set; } = string.Empty;
+    }
+
+    public class GroupSelectionResponse
+    {
+        [JsonPropertyName("GroupID")]
+        public long GroupId { get; set; }
+
+        [JsonPropertyName("Reason")]
+        public string Reason { get; set; } = string.Empty;
     }
 }
