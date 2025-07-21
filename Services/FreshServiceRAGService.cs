@@ -1,9 +1,16 @@
-﻿using Microsoft.Extensions.AI;
+﻿using AngleSharp;
+using AngleSharp.Dom;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Microsoft.Graph.Models;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using RAG2_Gemini.Models;
+using System.Net.Http;
+using System.Reflection.Metadata;
 using System.Text.Json;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace RAG2_Gemini.Services
 {
@@ -172,12 +179,28 @@ Your response must be a JSON array of objects with these keys:
                         .Where(c => c.UserId != ticket.RequesterId)
                         .Where(c => !c.Private)
                         .OrderByDescending(c => c.CreatedAt)
-                        .FirstOrDefault()?.BodyText;
+                        .FirstOrDefault()?.Body;
 
-                    if (!string.IsNullOrEmpty(resolution))
+                    // 1. Create a Browse context
+                    var context = BrowsingContext.New(Configuration.Default);
+
+                    // 2. Parse the HTML to create the 'document' object. Note the 'await' keyword.
+                    var document = await context.OpenAsync(req => req.Content(resolution));
+
+                    // 3. Your code now works because 'document' exists
+                    var elementsToRemove = document.QuerySelectorAll("body :not(a):not(img)");
+
+                    foreach (var element in elementsToRemove)
                     {
-                        contextBuilder.Add($"Ticket {ticket.Id} Resolution: {resolution}");
+                        // The ToArray() is important to avoid issues with modifying a live list
+                        element.Replace(element.ChildNodes.ToArray());
                     }
+
+                    resolution = document.Body.InnerHtml.Replace(
+                        "Penn only: Click on this link to view your ticket: https://benhelps.upenn.edu/helpdesk/tickets/",
+                        "");
+
+                    contextBuilder.Add(resolution);
                 }
                 catch (Exception ex)
                 {
@@ -208,15 +231,10 @@ Please provide a response that:
 8. If you cannot find relevant information, politely inform the user
 9. If the user question is not related to support, inform them that you can only assist with support-related queries
 10. Feel free to include any support links or emails if appropriate
-
+11. Provide the a link to BEN Helps Ticket creation (https://benhelps.upenn.edu/a/tickets/new) a suggestion.
 Response:";
 
-            // Clean up any specific organizational references that shouldn't be in the response
-            var cleanedPrompt = prompt.Replace(
-                "Penn only: Click on this link to view your ticket: https://benhelps.upenn.edu/helpdesk/tickets/",
-                "");
-
-            var response = await _chatService.GetChatMessageContentAsync(cleanedPrompt);
+            var response = await _chatService.GetChatMessageContentAsync(prompt);
             return response.Content;
         }
 

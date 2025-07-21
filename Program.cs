@@ -24,7 +24,7 @@ namespace RAG2_Gemini
 
             try
             {
-                Console.WriteLine("Welcome to the FreshService RAG System!");
+                Console.WriteLine("Welcome to the FreshService resolution referrer System!");
                 Console.Write("User input: ");
                 var userInput = Console.ReadLine();
 
@@ -61,8 +61,7 @@ namespace RAG2_Gemini
                     services.Configure<GeminiSettings>(
                         configuration.GetSection("ApiKeys"));
 
-                    // Register services
-                    
+                    // Register services                    
                     services.AddHttpClient<IFreshServiceClient, FreshServiceClient>();
                     services.AddSingleton<IFreshServiceRAGService, FreshServiceRAGService>();
 
