@@ -13,6 +13,50 @@ namespace RAG2_Gemini.Models
         public string Gemini { get; set; } = string.Empty;
     }
 
+    public class FreshServiceArticle
+    {
+        [JsonPropertyName("title")]
+        public string Title { get; set; }
+
+        // Mapped to "description_text" for the plain text content. 
+        // The "description" field contains HTML.
+        [JsonPropertyName("description_text")]
+        public string Description { get; set; }
+
+        [JsonPropertyName("user_id")]
+        public string AuthorID { get; set; }
+
+        [JsonPropertyName("id")]
+        public long ID { get; set; }
+
+        [JsonPropertyName("created_at")]
+        public DateTime CreatedAt { get; set; }
+
+        [JsonPropertyName("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+
+        [JsonPropertyName("review_date")]
+        public DateTime? ReviewDate { get; set; } // Changed to nullable DateTime to handle null values
+
+        [JsonPropertyName("folder_id")]
+        public long FolderID { get; set; }
+
+        [JsonPropertyName("category_id")]
+        public long CategoryID { get; set; }
+
+        [JsonPropertyName("status")]
+        public int Status { get; set; }
+
+        [JsonPropertyName("views")]
+        public int Views { get; set; }
+
+        [JsonPropertyName("article_type")]
+        public int ArticleType { get; set; }
+
+        [JsonPropertyName("keywords")]
+        public List<string> Keywords { get; set; }
+    }
+    
     public class FreshServiceGroupResponse
     {
         [JsonPropertyName("groups")]
@@ -133,6 +177,64 @@ namespace RAG2_Gemini.Models
 
         [JsonPropertyName("attachments")]
         public List<object> Attachments { get; set; } = new();
+    }
+
+    public class Category
+    {
+        /// <summary>
+        /// Gets or sets the unique identifier.
+        /// Mapped from the "id" JSON property.
+        /// </summary>
+        [JsonPropertyName("id")]
+        public long ID { get; set; }
+
+        /// <summary>
+        /// Gets or sets the creation timestamp.
+        /// Mapped from the "created_at" JSON property.
+        /// </summary>
+        [JsonPropertyName("created_at")]
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the last update timestamp.
+        /// Mapped from the "updated_at" JSON property.
+        /// </summary>
+        [JsonPropertyName("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name.
+        /// Mapped from the "name" JSON property.
+        /// </summary>
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the description.
+        /// Mapped from the "description" JSON property.
+        /// </summary>
+        [JsonPropertyName("description")]
+        public string Description { get; set; }
+
+        /// <summary>
+        /// Gets or sets the default category.
+        /// Mapped from the "default_category" JSON property.
+        /// </summary>
+        [JsonPropertyName("default_category")]
+        public bool DefaultCategory { get; set; }
+
+        /// <summary>
+        /// Gets or sets the position or order index.
+        /// Mapped from the "position" JSON property.
+        /// </summary>
+        [JsonPropertyName("position")]
+        public int Position { get; set; }
+    }
+
+    public class CategoryGroup
+    {
+        [JsonPropertyName("categories")]
+        public List<Category> Categories { get; set; } = new List<Category>();
     }
 
     public class Meta

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RAG2_Gemini.Models;
+using System.ComponentModel;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
@@ -88,6 +89,26 @@ namespace RAG2_Gemini.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to retrieve conversations for ticket {TicketId}", ticketId);
+                throw;
+            }
+        }
+
+        public async Task<List<Category>> GetCategoriesAsync()
+        {
+            try
+            {
+                var url = $"https://{_settings.Domain}/api/v2/solutions/categories";
+                var response = await _httpClient.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var categoryResponse = JsonSerializer.Deserialize<CategoryGroup>(jsonResponse);
+
+                return categoryResponse.Categories ?? new List<Category>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to retrieve FreshService solution categories.");
                 throw;
             }
         }

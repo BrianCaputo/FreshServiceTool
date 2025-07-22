@@ -25,6 +25,7 @@ namespace RAG2_Gemini
             try
             {
                 Console.WriteLine("Welcome to the FreshService resolution referrer System!");
+
                 Console.Write("User input: ");
                 var userInput = Console.ReadLine();
 

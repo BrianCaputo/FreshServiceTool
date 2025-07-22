@@ -20,7 +20,7 @@ namespace RAG2_Gemini.Services
         private readonly IChatCompletionService _chatService;
         private readonly ILogger<FreshServiceRAGService> _logger;
         private readonly Dictionary<long, FreshServiceGroup> _groups;
-
+        private readonly IList<Category> _categories;
         private const int MaxRelevantTickets = 5;
         private const string NoGroupFoundMessage = "I couldn't determine which support group handles your request. Please specify the group or rephrase your question.";
 
@@ -33,9 +33,9 @@ namespace RAG2_Gemini.Services
             _chatService = kernel.GetRequiredService<IChatCompletionService>();
             _logger = logger;
             _groups = new Dictionary<long, FreshServiceGroup>();
-
+            _categories = freshServiceClient.GetCategoriesAsync().GetAwaiter().GetResult(); // Synchronously wait for categories to load
             // Load groups on initialization
-            _ = Task.Run(async () => await LoadGroupsAsync());
+            _ = Task.Run(async () =>  await LoadGroupsAsync());
         }
 
         public async Task<string> GetRAGResponseAsync(string userInput)
@@ -181,13 +181,8 @@ Your response must be a JSON array of objects with these keys:
                         .OrderByDescending(c => c.CreatedAt)
                         .FirstOrDefault()?.Body;
 
-                    // 1. Create a Browse context
                     var context = BrowsingContext.New(Configuration.Default);
-
-                    // 2. Parse the HTML to create the 'document' object. Note the 'await' keyword.
                     var document = await context.OpenAsync(req => req.Content(resolution));
-
-                    // 3. Your code now works because 'document' exists
                     var elementsToRemove = document.QuerySelectorAll("body :not(a):not(img)");
 
                     foreach (var element in elementsToRemove)
@@ -196,7 +191,7 @@ Your response must be a JSON array of objects with these keys:
                         element.Replace(element.ChildNodes.ToArray());
                     }
 
-                    resolution = document.Body.InnerHtml.Replace(
+                    resolution = document.Body?.InnerHtml.Replace(
                         "Penn only: Click on this link to view your ticket: https://benhelps.upenn.edu/helpdesk/tickets/",
                         "");
 
