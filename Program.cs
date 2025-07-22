@@ -1,80 +1,64 @@
-﻿// Program.cs
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Http;
-using Microsoft.Extensions.Options;
-using Microsoft.Graph.Models.Security;
 using Microsoft.SemanticKernel;
 using RAG2_Gemini.Models;
 using RAG2_Gemini.Services;
 
 #pragma warning disable SKEXP0070 // Google AI connector is experimental
 
-namespace RAG2_Gemini
+var builder = WebApplication.CreateBuilder(args);
+
+// --- Configure services for Dependency Injection ---
+
+// Add user secrets and configuration
+builder.Configuration.AddJsonFile("appsettings.json", optional: true)
+                     .AddUserSecrets<Program>();
+
+// Add services to the container.
+builder.Services.AddControllers();
+
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Register your custom configuration settings
+builder.Services.Configure<FreshServiceSettings>(
+    builder.Configuration.GetSection("FreshService"));
+builder.Services.Configure<GeminiSettings>(
+    builder.Configuration.GetSection("ApiKeys"));
+
+// Register your custom services                    
+builder.Services.AddHttpClient<IFreshServiceClient, FreshServiceClient>();
+builder.Services.AddSingleton<IFreshServiceRAGService, FreshServiceRAGService>();
+
+// Register Semantic Kernel services
+builder.Services.AddSingleton<Kernel>(serviceProvider =>
 {
-    public class Program
-    {
-        public static async Task Main(string[] args)
-        {
-            var host = CreateHostBuilder(args).Build();
-            var ragService = host.Services.GetRequiredService<IFreshServiceRAGService>();
-            var logger = host.Services.GetRequiredService<ILogger<Program>>();
+    var geminiApiKey = builder.Configuration["ApiKeys:Gemini"];
+    var kernelBuilder = Kernel.CreateBuilder();
+    kernelBuilder.Services.AddGoogleAIGeminiChatCompletion("gemini-1.5-flash", geminiApiKey);
+    return kernelBuilder.Build();
+});
 
-            try
-            {
-                Console.WriteLine("Welcome to the FreshService resolution referrer System!");
 
-                Console.Write("User input: ");
-                var userInput = Console.ReadLine();
+// --- Build the application ---
+var app = builder.Build();
 
-                if (string.IsNullOrWhiteSpace(userInput))
-                {
-                    Console.WriteLine("Please provide a valid input.");
-                    return;
-                }
+// --- Configure the HTTP request pipeline ---
 
-                var response = await ragService.GetRAGResponseAsync(userInput);
-                Console.WriteLine("\n" + response);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "An error occurred while processing the request");
-                Console.WriteLine($"Error: {ex.Message}");
-            }
-        }
-
-        private static IHostBuilder CreateHostBuilder(string[] args) =>
-           Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration((context, config) =>
-                {
-                    config.AddJsonFile("appsettings.json", optional: true)
-                          .AddUserSecrets<Program>();
-                })
-                .ConfigureServices((context, services) =>
-                {
-                    var configuration = context.Configuration;
-
-                    // Register configuration
-                    services.Configure<FreshServiceSettings>(
-                        configuration.GetSection("FreshService"));
-                    services.Configure<GeminiSettings>(
-                        configuration.GetSection("ApiKeys"));
-
-                    // Register services                    
-                    services.AddHttpClient<IFreshServiceClient, FreshServiceClient>();
-                    services.AddSingleton<IFreshServiceRAGService, FreshServiceRAGService>();
-
-                    // Register Semantic Kernel services
-                    services.AddSingleton<Kernel>(serviceProvider =>
-                    {
-                        var geminiApiKey = configuration["ApiKeys:Gemini"];
-                        var kernelBuilder = Kernel.CreateBuilder();
-                        kernelBuilder.AddGoogleAIEmbeddingGenerator("text-embedding-004", geminiApiKey);
-                        kernelBuilder.AddGoogleAIGeminiChatCompletion("gemini-2.5-flash", geminiApiKey);
-                        return kernelBuilder.Build();
-                    });
-                });
-    }
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run("https://localhost:7003");
