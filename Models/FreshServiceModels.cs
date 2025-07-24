@@ -1,6 +1,7 @@
-﻿using System.Text.Json.Serialization;
+﻿using Microsoft.Graph.Models;
+using System.Text.Json.Serialization;
 
-namespace RAG2_Gemini.Models
+namespace FreshServiceTools.Models
 {
     public class FreshServiceSettings
     {
@@ -13,7 +14,7 @@ namespace RAG2_Gemini.Models
         public string Gemini { get; set; } = string.Empty;
     }
 
-    public class FreshServiceArticle
+    public class FreshArticle
     {
         [JsonPropertyName("title")]
         public string Title { get; set; }
@@ -57,16 +58,16 @@ namespace RAG2_Gemini.Models
         public List<string> Keywords { get; set; }
     }
     
-    public class FreshServiceGroupResponse
+    public class FreshGroupResponse
     {
         [JsonPropertyName("groups")]
-        public List<FreshServiceGroup> Groups { get; set; } = new();
+        public List<FreshGroup> Groups { get; set; } = new();
     }
 
-    public class FreshServiceGroup
+    public class FreshGroup
     {
         [JsonPropertyName("id")]
-        public long Id { get; set; }
+        public long ID { get; set; }
 
         [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
@@ -75,13 +76,13 @@ namespace RAG2_Gemini.Models
         public string Description { get; set; } = string.Empty;
     }
 
-    public class FreshServiceTicketResponse
+    public class FreshTicketResponse
     {
         [JsonPropertyName("tickets")]
-        public List<FreshServiceTicket> Tickets { get; set; } = new();
+        public List<FreshTicket> Tickets { get; set; } = new();
     }
 
-    public class FreshServiceTicket
+    public class FreshTicket
     {
         [JsonPropertyName("id")]
         public long Id { get; set; }
@@ -119,16 +120,16 @@ namespace RAG2_Gemini.Models
         public string GroupName { get; set; } = string.Empty;
     }
 
-    public class ConversationsResponse
+    public class FreshConversationsResponse
     {
         [JsonPropertyName("conversations")]
-        public List<Conversation> Conversations { get; set; } = new();
+        public List<FreshConversation> Conversations { get; set; } = new();
 
-        [JsonPropertyName("meta")]
-        public Meta Meta { get; set; } = new();
+//        [JsonPropertyName("meta")]
+//        public Meta Meta { get; set; } = new();
     }
 
-    public class Conversation
+    public class FreshConversation
     {
         [JsonPropertyName("id")]
         public long Id { get; set; }
@@ -179,7 +180,7 @@ namespace RAG2_Gemini.Models
         public List<object> Attachments { get; set; } = new();
     }
 
-    public class Category
+    public class FreshCategory
     {
         /// <summary>
         /// Gets or sets the unique identifier.
@@ -231,13 +232,13 @@ namespace RAG2_Gemini.Models
         public int Position { get; set; }
     }
 
-    public class CategoryGroup
+    public class FreshCategoryGroup
     {
         [JsonPropertyName("categories")]
-        public List<Category> Categories { get; set; } = new List<Category>();
+        public List<FreshCategory> Categories { get; set; } = new List<FreshCategory>();
     }
 
-    public class Meta
+    public class FreshCategoryMeta
     {
         [JsonPropertyName("count")]
         public int Count { get; set; }
@@ -268,5 +269,74 @@ namespace RAG2_Gemini.Models
 
         [JsonPropertyName("Reason")]
         public string Reason { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Represents the root object of the API response.
+    /// </summary>
+    public class FreshFolderResponse
+    {
+        [JsonPropertyName("folders")]
+        public List<FreshFolder> Folders { get; set; }
+
+        [JsonPropertyName("meta")]
+        public FolderMeta? Meta { get; set; }
+    }
+
+    /// <summary>
+    /// Represents a single folder item from the API.
+    /// </summary>
+    public class FreshFolder
+    {
+        [JsonPropertyName("description")]
+        public string Description { get; set; }
+
+        [JsonPropertyName("id")]
+        public long ID { get; set; }
+
+        [JsonPropertyName("created_at")]
+        public DateTime CreatedAt { get; set; }
+
+        [JsonPropertyName("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+
+        [JsonPropertyName("category_id")]
+        public long CategoryID { get; set; }
+
+        [JsonPropertyName("position")]
+        public int Position { get; set; }
+
+        [JsonPropertyName("workspace_id")]
+        public int WorkspaceID { get; set; }
+
+        [JsonPropertyName("visibility")]
+        public int Visibility { get; set; }
+
+        [JsonPropertyName("approval_settings")]
+        public object ApprovalSettings { get; set; } // Use 'object' as it's null, or a specific class if the structure is known.
+
+        [JsonPropertyName("default_folder")]
+        public bool DefaultFolder { get; set; }
+
+        [JsonPropertyName("manage_by_group_ids")]
+        public List<long> ManageByGroupIDs { get; set; } // Assuming IDs are long
+    }
+
+    /// <summary>
+    /// Represents the metadata for the API response, typically for pagination.
+    /// </summary>
+    public class FolderMeta
+    {
+        [JsonPropertyName("count")]
+        public int Count { get; set; }
+
+        [JsonPropertyName("page")]
+        public string? Page { get; set; } // Nullable int since the value can be null
+
+        [JsonPropertyName("per_page")]
+        public string? PerPage { get; set; } // Kept as string to match JSON, can be converted to int if needed.
     }
 }

@@ -3,8 +3,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.SemanticKernel;
-using RAG2_Gemini.Models;
-using RAG2_Gemini.Services;
+using FreshServiceTools.Models;
+using FreshServiceTools.Services;
 
 #pragma warning disable SKEXP0070 // Google AI connector is experimental
 
@@ -31,22 +31,18 @@ builder.Services.Configure<GeminiSettings>(
 
 // Register your custom services                    
 builder.Services.AddHttpClient<IFreshServiceClient, FreshServiceClient>();
-builder.Services.AddSingleton<IFreshServiceRAGService, FreshServiceRAGService>();
+//builder.Services.AddSingleton<IFreshServiceRAGService, FreshServiceRAGService>();
 
 // Register Semantic Kernel services
 builder.Services.AddSingleton<Kernel>(serviceProvider =>
 {
     var geminiApiKey = builder.Configuration["ApiKeys:Gemini"];
     var kernelBuilder = Kernel.CreateBuilder();
-    kernelBuilder.Services.AddGoogleAIGeminiChatCompletion("gemini-1.5-flash", geminiApiKey);
+    kernelBuilder.Services.AddGoogleAIGeminiChatCompletion("gemini-2.5-flash", geminiApiKey);
     return kernelBuilder.Build();
 });
-
-
 // --- Build the application ---
 var app = builder.Build();
-
-// --- Configure the HTTP request pipeline ---
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -56,9 +52,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run("https://localhost:7003");

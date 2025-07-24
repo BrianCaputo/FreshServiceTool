@@ -1,12 +1,14 @@
-﻿using RAG2_Gemini.Models;
+﻿using FreshServiceTools.Models;
 
-namespace RAG2_Gemini.Services
+namespace FreshServiceTools.Services
 {
     public interface IFreshServiceClient
     {
-        Task<List<FreshServiceGroup>> GetGroupsAsync();
-        Task<List<Category>> GetCategoriesAsync();
-        Task<List<FreshServiceTicket>> GetResolvedTicketsAsync(long groupId, int daysBack = 30);
-        Task<ConversationsResponse> GetTicketConversationsAsync(long ticketId);
+        Task<string> GetResponseFromResolvedTicketsAsync(string userInput);
+        Task<List<FreshGroup>> GetGroupsAsync();
+        Task<List<FreshCategory>> GetCategoriesAsync();
+        Task<List<FreshTicket>> GetResolvedTicketsAsync(long groupId, int daysBack = 30);
+        Task<List<FreshConversation>> GetTicketConversationsAsync(long ticketId);
+        Task<List<FreshFolder>> GetFoldersAsync();        
     }
 }

@@ -5,12 +5,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Graph.Models;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using RAG2_Gemini.Models;
+using FreshServiceTools.Models;
 using System.Net.Http;
 using System.Reflection.Metadata;
 using System.Text.Json;
 using System.Xml;
 using System.Xml.Linq;
+using FreshServiceTools.Services;
 
 namespace RAG2_Gemini.Services
 {
@@ -19,8 +20,8 @@ namespace RAG2_Gemini.Services
         private readonly IFreshServiceClient _freshServiceClient;
         private readonly IChatCompletionService _chatService;
         private readonly ILogger<FreshServiceRAGService> _logger;
-        private readonly Dictionary<long, FreshServiceGroup> _groups;
-        private readonly IList<Category> _categories;
+        private readonly Dictionary<long, FreshGroup> _groups;
+        private readonly IList<FreshCategory> _categories;
         private const int MaxRelevantTickets = 5;
         private const string NoGroupFoundMessage = "I couldn't determine which support group handles your request. Please specify the group or rephrase your question.";
 
@@ -32,7 +33,7 @@ namespace RAG2_Gemini.Services
             _freshServiceClient = freshServiceClient;
             _chatService = kernel.GetRequiredService<IChatCompletionService>();
             _logger = logger;
-            _groups = new Dictionary<long, FreshServiceGroup>();
+            //_groups = new Dictionary<long, FreshGroup>();
             _categories = freshServiceClient.GetCategoriesAsync().GetAwaiter().GetResult(); // Synchronously wait for categories to load
             // Load groups on initialization
             _ = Task.Run(async () =>  await LoadGroupsAsync());
@@ -53,7 +54,7 @@ namespace RAG2_Gemini.Services
                     targetGroup.Name, userInput);
 
                 // Step 2: Get resolved tickets from the selected group
-                var tickets = await _freshServiceClient.GetResolvedTicketsAsync(targetGroup.Id);
+                var tickets = await _freshServiceClient.GetResolvedTicketsAsync(targetGroup.ID);
 
                 // Step 3: Find the most relevant tickets
                 var relevantTickets = await FindRelevantTicketsAsync(userInput, tickets);
@@ -78,7 +79,7 @@ namespace RAG2_Gemini.Services
                 var groups = await _freshServiceClient.GetGroupsAsync();
                 foreach (var group in groups)
                 {
-                    _groups[group.Id] = group;
+                    _groups[group.ID] = group;
                 }
                 _logger.LogInformation("Loaded {GroupCount} FreshService groups", groups.Count);
             }
@@ -88,12 +89,13 @@ namespace RAG2_Gemini.Services
             }
         }
 
-        private async Task<FreshServiceGroup?> DetermineGroupFromUserInputAsync(string userInput)
+        private async Task<FreshGroup?> DetermineGroupFromUserInputAsync(string userInput)
         {
             try
             {
-                var groupsList = string.Join("\n", _groups.Values.Select(g =>
-                    $"{g.Id}: {g.Name} - {g.Description}"));
+                var groupsList = string.Join("\n", 
+                    _groups.Values.Select(g =>
+                    $"{g.ID}: {g.Name} - {g.Description}"));
 
                 var prompt = $@"You are a support assistant and an expert intent analyst. 
 Based on the following user input: '{userInput}', help select the best agent group to find resolved tickets for answers.
@@ -124,7 +126,7 @@ Response format: {{""GroupID"": ID as a long, ""Reason"": ""Reason""}}";
             }
         }
 
-        private async Task<List<RelevantTicket>> FindRelevantTicketsAsync(string userInput, List<FreshServiceTicket> tickets)
+        private async Task<List<RelevantTicket>> FindRelevantTicketsAsync(string userInput, List<FreshTicket> tickets)
         {
             if (!tickets.Any())
             {
@@ -175,7 +177,7 @@ Your response must be a JSON array of objects with these keys:
                 {
                     var conversations = await _freshServiceClient.GetTicketConversationsAsync(ticket.Id);
 
-                    var resolution = conversations.Conversations
+                    var resolution = conversations
                         .Where(c => c.UserId != ticket.RequesterId)
                         .Where(c => !c.Private)
                         .OrderByDescending(c => c.CreatedAt)

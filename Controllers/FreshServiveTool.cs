@@ -1,36 +1,36 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using RAG2_Gemini.Services;
+using FreshServiceTools.Services;
 
-namespace RAG2_Gemini.Controllers
+namespace FreshServiceTools.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class RAGController : ControllerBase
+    public class BenBotController : ControllerBase
     {
-        private readonly IFreshServiceRAGService _ragService;
-        private readonly ILogger<RAGController> _logger;
+        private readonly IFreshServiceClient _benBot;
+        private readonly ILogger<BenBotController> _logger;
 
-        public RAGController(IFreshServiceRAGService ragService, ILogger<RAGController> logger)
+        public BenBotController(IFreshServiceClient benBot, ILogger<BenBotController> logger)
         {
-            _ragService = ragService;
+            _benBot = benBot;
             _logger = logger;
         }
 
         /// <summary>
-        /// Gets a RAG response for a given user input.
+        /// Gets a response for a given user input.
         /// </summary>
         /// <param name="userInput">The user's query.</param>
         /// <returns>A generated response based on FreshService data.</returns>
         [HttpPost("query")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<string>> GetRAGResponse([FromBody] string userInput)
+        public async Task<ActionResult<string>> GetResponse([FromBody] string userInput)
         {
             try
             {
-                var response = await _ragService.GetRAGResponseAsync(userInput);
+                var response = await _benBot.GetResponseFromResolvedTicketsAsync(userInput);
                 return Ok(response);
             }
             catch (Exception ex)
