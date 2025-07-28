@@ -14,18 +14,24 @@ namespace FreshServiceTools.Models
         public string Gemini { get; set; } = string.Empty;
     }
 
+    public class FreshArticleResponse
+    {
+        [JsonPropertyName("articles")]
+        public List<FreshArticle> Articles { get; set; }
+    }
+
     public class FreshArticle
     {
         [JsonPropertyName("title")]
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
         // Mapped to "description_text" for the plain text content. 
         // The "description" field contains HTML.
         [JsonPropertyName("description_text")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [JsonPropertyName("user_id")]
-        public string AuthorID { get; set; }
+        public long? AuthorID { get; set; }
 
         [JsonPropertyName("id")]
         public long ID { get; set; }
@@ -34,30 +40,30 @@ namespace FreshServiceTools.Models
         public DateTime CreatedAt { get; set; }
 
         [JsonPropertyName("updated_at")]
-        public DateTime UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 
         [JsonPropertyName("review_date")]
         public DateTime? ReviewDate { get; set; } // Changed to nullable DateTime to handle null values
 
         [JsonPropertyName("folder_id")]
-        public long FolderID { get; set; }
+        public long? FolderID { get; set; }
 
         [JsonPropertyName("category_id")]
-        public long CategoryID { get; set; }
+        public long? CategoryID { get; set; }
 
         [JsonPropertyName("status")]
-        public int Status { get; set; }
+        public int? Status { get; set; }
 
         [JsonPropertyName("views")]
-        public int Views { get; set; }
+        public int? Views { get; set; }
 
         [JsonPropertyName("article_type")]
-        public int ArticleType { get; set; }
+        public int? ArticleType { get; set; }
 
         [JsonPropertyName("keywords")]
-        public List<string> Keywords { get; set; }
+        public List<string>? Keywords { get; set; }
     }
-    
+
     public class FreshGroupResponse
     {
         [JsonPropertyName("groups")]
@@ -270,10 +276,17 @@ namespace FreshServiceTools.Models
         [JsonPropertyName("Reason")]
         public string Reason { get; set; } = string.Empty;
     }
+    public class FolderSelectionResponse
+    {
+        [JsonPropertyName("FolderID")]
+        public long FolderId { get; set; }
 
-    /// <summary>
-    /// Represents the root object of the API response.
-    /// </summary>
+        [JsonPropertyName("Reason")]
+        public string Reason { get; set; } = string.Empty;
+        [JsonPropertyName("Score")]
+        public int Score { get; set; }
+    }
+    
     public class FreshFolderResponse
     {
         [JsonPropertyName("folders")]
@@ -283,9 +296,6 @@ namespace FreshServiceTools.Models
         public FolderMeta? Meta { get; set; }
     }
 
-    /// <summary>
-    /// Represents a single folder item from the API.
-    /// </summary>
     public class FreshFolder
     {
         [JsonPropertyName("description")]
@@ -325,9 +335,6 @@ namespace FreshServiceTools.Models
         public List<long> ManageByGroupIDs { get; set; } // Assuming IDs are long
     }
 
-    /// <summary>
-    /// Represents the metadata for the API response, typically for pagination.
-    /// </summary>
     public class FolderMeta
     {
         [JsonPropertyName("count")]
@@ -338,5 +345,17 @@ namespace FreshServiceTools.Models
 
         [JsonPropertyName("per_page")]
         public string? PerPage { get; set; } // Kept as string to match JSON, can be converted to int if needed.
+    }
+
+    public class RevelantFreshArticle
+    {
+        [JsonPropertyName("ID")]
+        public long ID { get; set; }
+        [JsonPropertyName("Subject")]
+        public string Subject { get; set; }
+        [JsonPropertyName("Similarity_Score")]
+        public int SimilarityScore { get; set; }
+        [JsonPropertyName("Reason")]
+        public string Reason { get; set; }
     }
 }
