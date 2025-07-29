@@ -6,6 +6,7 @@ namespace FreshServiceTools.Services
     {
         Task<string> GetResponseFromResolvedTicketsAsync(string userInput);
         Task<string> GetResponseFromArticles(string userInput);
+        Task<string> GetCombinedResponseAsync(string userInput);
 
         Task<List<FreshGroup>> GetGroupsAsync();
         Task<List<FreshCategory>> GetCategoriesAsync();

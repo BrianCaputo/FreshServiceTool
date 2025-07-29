@@ -13,7 +13,8 @@ using Microsoft.Graph.Models.Security;
 
 namespace FreshServiceTools.Services
 {
-    public class FreshServiceClient : IFreshServiceClient
+    public class FreshServiceClient : 
+        IFreshServiceClient
     {
         private const int MaxRelevantTickets = 5;
         private readonly IChatCompletionService ChatService;
@@ -527,6 +528,87 @@ Your response must be a JSON array of objects with these keys:
                 throw;
             }
             return result;
+        }
+
+        public async Task<string> GetCombinedResponseAsync(string userInput)
+        {
+            try
+            {
+                // Step 1: Run ticket and article searches in parallel
+                var ticketContextTask = GetTicketContextAsync(userInput);
+                var articleContextTask = GetArticleContextAsync(userInput);
+
+                await Task.WhenAll(ticketContextTask, articleContextTask);
+
+                var ticketContext = await ticketContextTask;
+                var (relevantArticle, articleContent) = await articleContextTask;
+
+                // Step 2: Generate a final response using the combined context
+                return await GenerateCombinedResponseAsync(userInput, ticketContext, relevantArticle, articleContent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing combined response for input: {UserInput}", userInput);
+                return "I apologize, but I encountered an error while processing your request. Please try again later.";
+            }
+        }
+        private async Task<string> GetTicketContextAsync(string userInput)
+        {
+            var targetGroup = await DetermineGroupFromUserInputAsync(userInput);
+            if (targetGroup == null) return "";
+
+            _logger.LogInformation("Selected group: {GroupName} for ticket search.", targetGroup.Name);
+            var tickets = await GetResolvedTicketsAsync(targetGroup.ID);
+            var relevantTickets = await FindRelevantTicketsAsync(userInput, tickets);
+
+            return await BuildConversationContextAsync(relevantTickets);
+        }
+        private async Task<(FreshArticle?, string)> GetArticleContextAsync(string userInput)
+        {
+            var targetFolder = await DetermineFolderFromUserInputAsync(userInput);
+            if (targetFolder == null) return (null, "");
+
+            _logger.LogInformation("Selected folder: {FolderName} for article search.", targetFolder.Name);
+            var articles = await GetArticlesByFolderAsync(targetFolder.ID);
+            var relevantArticleResult = await FindRelevantArticlesAsync(userInput, articles);
+
+            var relevantArticle = articles.FirstOrDefault(a => a.ID == relevantArticleResult.ID);
+            return (relevantArticle, relevantArticle?.Description ?? "");
+        }
+        private async Task<string> GenerateCombinedResponseAsync(string userInput, string ticketContext, FreshArticle? article, string articleContent)
+        {
+            if (string.IsNullOrWhiteSpace(ticketContext) && string.IsNullOrWhiteSpace(articleContent))
+            {
+                return "I could not find any relevant information in our knowledge base or resolved tickets to answer your question. You may want to try rephrasing it.";
+            }
+
+            var prompt = $@"You are a support assistant. Based on information from a relevant knowledge base article and context from resolved support tickets, provide a comprehensive and helpful response. Prioritize the knowledge base article if it directly answers the question.
+
+User Question: {userInput}
+
+---
+Relevant Knowledge Base Article:
+Title: {article?.Title ?? "N/A"}
+Content: {articleContent ?? "No relevant article found."}
+---
+
+---
+Related Resolved Tickets (for additional context):
+{(!string.IsNullOrWhiteSpace(ticketContext) ? ticketContext : "No relevant tickets found.")}
+---
+
+Please provide a single, synthesized response that:
+1. Addresses the user's question directly, using the article first if available.
+2. References relevant information from both sources if applicable.
+3. Suggests actionable next steps.
+4. Maintains a helpful and professional tone.
+5. Removes any sensitive individual information like names and email addresses.
+6. Includes organizational references, such as Penn Marketplace, if relevant.
+7. Provides a link to the BEN Helps Ticket creation page (https://benhelps.upenn.edu/support/tickets/new) if the user may need further assistance.
+Response:";
+
+            var response = await ChatService.GetChatMessageContentAsync(prompt);
+            return response.Content ?? "I am unable to provide a response at this time.";
         }
     }
 }

@@ -77,6 +77,7 @@ namespace FreshServiceTools.Controllers
         }
     }
 
+
     [ApiController]
     [Route("api/[controller]")]
     public class RelatedArticlesController : ControllerBase
@@ -114,10 +115,84 @@ namespace FreshServiceTools.Controllers
     }
 
     /// <summary>
+    /// API controller for handling support requests.
+    /// </summary>
+    [ApiController]
+    [Route("api/[controller]")]
+    public class SupportController : ControllerBase
+    {
+        private readonly IFreshServiceClient _freshServiceClient;
+        private readonly ILogger<SupportController> _logger;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SupportController"/> class.
+        /// </summary>
+        /// <param name="freshServiceClient">The FreshService client instance.</param>
+        /// <param name="logger">The logger instance.</param>
+        public SupportController(IFreshServiceClient freshServiceClient, ILogger<SupportController> logger)
+        {
+            _freshServiceClient = freshServiceClient;
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Receives a user question, gets a combined response from knowledge base articles and resolved tickets,
+        /// and returns the answer.
+        /// </summary>
+        /// <param name="request">The support request containing the user's input.</param>
+        /// <returns>An IActionResult containing the support response.</returns>
+        [HttpPost("ask")]
+        [ProducesResponseType(typeof(SupportResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetCombinedResponse([FromBody] UserInputModel request)
+        {
+            // Validate the input
+            if (request == null || string.IsNullOrWhiteSpace(request.Query))
+            {
+                _logger.LogWarning("Received a request with empty or null user input.");
+                return BadRequest("User input cannot be empty.");
+            }
+
+            try
+            {
+                _logger.LogInformation("Processing combined response for user input: '{UserInput}'", request.Query);
+
+                // Call the merged service method
+                var responseText = await _freshServiceClient.GetCombinedResponseAsync(request.Query);
+
+                // Create the response object
+                var response = new SupportResponse
+                {
+                    Response = responseText
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred while processing the support request for input: {UserInput}", request.Query);
+                return StatusCode(500, "An internal server error occurred. Please try again later.");
+            }
+        }
+    }
+
+
+    /// <summary>
     /// A model to encapsulate the user's input from the request body.
     /// </summary>
     public class UserInputModel
     {
         public string? Query { get; set; }
+    }
+    /// <summary>
+    /// Represents the response model for the support endpoint.
+    /// </summary>
+    public class SupportResponse
+    {
+        /// <summary>
+        /// The generated response from the support service.
+        /// </summary>
+        public string Response { get; set; }
     }
 }
