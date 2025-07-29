@@ -1,0 +1,190 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Chat</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the chat interface */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the chat bubbles */
+        .chat-bubble {
+            max-width: 75%;
+            word-wrap: break-word;
+        }
+        /* Custom scrollbar for a cleaner look */
+        #chat-window::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chat-window::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #chat-window::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+            #chat-window::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+
+    <div class="w-full max-w-2xl h-full md:h-[90vh] flex flex-col bg-white shadow-2xl rounded-xl">
+        <!-- Header -->
+        <header class="bg-gray-800 text-white p-4 rounded-t-xl shadow-md">
+            <h1 class="text-xl font-bold text-center">Support Assistant</h1>
+            <p class="text-sm text-center text-gray-300">Powered by BenHelp AI & Procure-obot fka Awesome-o 2000!</p>
+        </header>
+
+        <!-- Chat Window -->
+        <main id="chat-window" class="flex-1 p-6 overflow-y-auto space-y-4">
+            <!-- Initial Bot Message -->
+            <div class="flex justify-start">
+                <div class="chat-bubble bg-gray-200 text-gray-800 p-3 rounded-lg">
+                    <p>Hello! How can I help you today?</p>
+                </div>
+            </div>
+            <!-- Chat messages will be appended here -->
+        </main>
+
+        <!-- Typing Indicator -->
+        <div id="typing-indicator" class="p-4 hidden">
+            <div class="flex items-center justify-start">
+                <div class="chat-bubble bg-gray-200 text-gray-800 p-3 rounded-lg flex items-center">
+                    <span class="font-bold mr-2">Bot is typing</span>
+                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s] mx-1"></div>
+                    <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Input Area -->
+        <footer class="p-4 bg-white border-t border-gray-200 rounded-b-xl">
+            <div class="flex items-center">
+                <input type="text" id="userInput" class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type your question here...">
+                <button id="sendButton" class="ml-3 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400">
+                    Send
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // DOM element references
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        // --- Event Listeners ---
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        /**
+         * Core function to handle sending a message.
+         * It captures user input, displays it, and calls the API.
+         */
+        async function sendMessage() {
+            const messageText = userInput.value.trim();
+            if (!messageText) return; // Don't send empty messages
+
+            // Display the user's message immediately
+            appendMessage(messageText, 'user');
+            userInput.value = ''; // Clear the input field
+
+            // Show the typing indicator and disable the send button
+            typingIndicator.classList.remove('hidden');
+            sendButton.disabled = true;
+
+            try {
+                // --- ⬇️ IMPORTANT: You MUST replace this URL with your actual API endpoint ⬇️ ---
+                // The relative path '/api/support/ask' will not work when running the HTML file directly.
+                // You need the full URL to where your API is hosted.
+                const apiUrl = 'https://localhost:7003/api/Support/ask'; // Example: 'https://your-api-url.com/api/support/ask'
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ query: messageText })
+                });
+
+                // Hide the typing indicator
+                typingIndicator.classList.add('hidden');
+
+                if (!response.ok) {
+                    // Handle HTTP errors (e.g., 404, 500)
+                    const errorText = await response.text();
+                    throw new Error(`API Error: ${response.status} - ${errorText || 'Could not connect to the server.'}`);
+                }
+
+                const data = await response.json();
+
+                // Display the bot's response
+                appendMessage(data.response, 'bot');
+
+            } catch (error) {
+                console.error("Failed to get response:", error);
+                // Display an error message in the chat
+                appendMessage(`Sorry, I'm having trouble connecting. Please check the API URL and make sure your server is running. <br><small>Error: ${error.message}</small>`, 'bot-error');
+                // Also hide the indicator on error
+                typingIndicator.classList.add('hidden');
+            } finally {
+                // Re-enable the send button after the process is complete
+                sendButton.disabled = false;
+            }
+        }
+
+        /**
+         * Appends a message bubble to the chat window.
+         * @param {string} text - The message content.
+         * @param {'user' | 'bot' | 'bot-error'} type - The type of message sender.
+         */
+        function appendMessage(text, type) {
+            const messageDiv = document.createElement('div');
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.classList.add('chat-bubble', 'p-3', 'rounded-lg');
+
+            // Apply different styles based on the message type
+            if (type === 'user') {
+                messageDiv.classList.add('flex', 'justify-end');
+                bubbleDiv.classList.add('bg-blue-600', 'text-white');
+            } else if (type === 'bot') {
+                messageDiv.classList.add('flex', 'justify-start');
+                bubbleDiv.classList.add('bg-gray-200', 'text-gray-800');
+            } else if (type === 'bot-error') {
+                messageDiv.classList.add('flex', 'justify-start');
+                bubbleDiv.classList.add('bg-red-200', 'text-red-800', 'border', 'border-red-400');
+            }
+
+            bubbleDiv.innerHTML = `<p>${text}</p>`; // Use innerHTML to render potential links or formatted error messages
+            messageDiv.appendChild(bubbleDiv);
+            chatWindow.appendChild(messageDiv);
+
+            // Automatically scroll to the latest message
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+    </script>
+
+</body>
+</html>

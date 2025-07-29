@@ -15,7 +15,23 @@ var builder = WebApplication.CreateBuilder(args);
 // Add user secrets and configuration
 builder.Configuration.AddJsonFile("appsettings.json", optional: true)
                      .AddUserSecrets<Program>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowChatApp",
+        policy =>
+        {
+            // Allow the origin of your chat app
+            policy.AllowAnyOrigin() //WithOrigins("https://localhost:7003")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
 
+            // If you are just running the HTML file directly, 
+            // you might need to allow any origin for simplicity during testing.
+            // policy.AllowAnyOrigin()
+            //       .AllowAnyHeader()
+            //       .AllowAnyMethod();
+        });
+});
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -52,6 +68,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowChatApp");
 app.UseAuthorization();
 app.MapControllers();
 app.Run("https://localhost:7003");
