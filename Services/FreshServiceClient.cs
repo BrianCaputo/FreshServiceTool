@@ -37,7 +37,6 @@ namespace FreshServiceTools.Services
             Groups = GetGroupsAsync().Result;
             Categories = GetCategoriesAsync().Result;
             Folders = GetFoldersAsync().Result;
-          //  Articles = GetArticlesByFolderAsync(15000071883).Result;
         }
 
         private void ConfigureHttpClient()
@@ -85,7 +84,7 @@ namespace FreshServiceTools.Services
                 throw;
             }
         }
-        public async Task<List<FreshFolder>> GetFoldersAsync()
+        public async Task<List<FreshFolder>> GetFoldersAsync(bool includeArticles=false)
         {
             List<FreshFolder> result = new List<FreshFolder>();
             int pageSize = 100;
@@ -101,9 +100,10 @@ namespace FreshServiceTools.Services
 
                     var jsonResponse = await response.Content.ReadAsStringAsync();
                     var folderResponse = JsonSerializer.Deserialize<FreshFolderResponse>(jsonResponse);
-                    result.AddRange(folderResponse.Folders);
+                    result.AddRange(folderResponse.Folders.Where(a=>a.Visibility==2 && a.WorkspaceID==2 ));
+                    
+                    flag = page*pageSize < folderResponse.Meta.Count;
                     page++;
-                    flag = result.Count < folderResponse.Meta.Count;
                 }
                 catch (Exception ex)
                 {
@@ -111,9 +111,18 @@ namespace FreshServiceTools.Services
                     throw;
                 }
             }
+            if (includeArticles)
+            {
+                foreach (var folder in result)
+                {
+                    Thread.Sleep(250);  // respect the API by not flooding it.
+                    List<FreshArticle> articles = GetArticlesByFolderAsync(folder.ID).Result;
+                    folder.Articles = articles.Where(a => a.Status == 2).ToList();
+                    _logger.LogInformation("Folder: {Name} ({ID}) Loaded and {Count} articles included. ", folder.Name, folder.ID, folder.Articles.Count);
+                }
+            }
             return result;
         }
-
 
         public async Task<List<FreshTicket>> GetResolvedTicketsAsync(long groupId, int daysBack = 30)
         {
@@ -293,7 +302,6 @@ Response format: {{""GroupID"": ID as a long, ""Reason"": ""Reason""}}";
             }
         }
         
-        //TODO: Tweak this to work with Articles
         public async Task<string> GetResponseFromArticles(string userInput)
         {
             try
@@ -385,10 +393,10 @@ Response format: {{""ID"": ID as a long,""Subject"": Subject, ""Similarity_Score
         public async Task<List<FreshArticle>> GetArticlesByFolderAsync(long FolderID)
         {
             List<FreshArticle> result = new List<FreshArticle>();
-            int pageSize = 100;
+
             try
             {
-                var url = $"https://{_settings.Domain}/api/v2/solutions/articles?folder_id={FolderID}&per_page={pageSize}";
+                var url = $"https://{_settings.Domain}/api/v2/solutions/articles?folder_id={FolderID}";
                 var response = await HttpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
 
@@ -402,7 +410,7 @@ Response format: {{""ID"": ID as a long,""Subject"": Subject, ""Similarity_Score
                 throw;
             }
             return result;
-        }
+        }        
 
         public async Task<FreshFolder> DetermineFolderFromUserInputAsync(string userInput) {
             try

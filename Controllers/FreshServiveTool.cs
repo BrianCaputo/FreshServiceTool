@@ -41,7 +41,6 @@ namespace FreshServiceTools.Controllers
         }
     }
 
-
     [ApiController]
     [Route("api/[controller]")]
     public class SearchArticleController : ControllerBase
@@ -113,6 +112,7 @@ namespace FreshServiceTools.Controllers
             }
         }
     }
+
     /// <summary>
     /// A model to encapsulate the user's input from the request body.
     /// </summary>

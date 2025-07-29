@@ -333,6 +333,8 @@ namespace FreshServiceTools.Models
 
         [JsonPropertyName("manage_by_group_ids")]
         public List<long> ManageByGroupIDs { get; set; } // Assuming IDs are long
+
+        public List<FreshArticle> Articles { get; set; }  // just added to created a in memory db-like structure of articles.
     }
 
     public class FolderMeta
