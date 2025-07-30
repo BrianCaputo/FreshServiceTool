@@ -44,8 +44,11 @@
     <div class="w-full max-w-2xl h-full md:h-[90vh] flex flex-col bg-white shadow-2xl rounded-xl">
         <!-- Header -->
         <header class="bg-gray-800 text-white p-4 rounded-t-xl shadow-md">
-            <h1 class="text-xl font-bold text-center">Support Assistant</h1>
-            <p class="text-sm text-center text-gray-300">Powered by BenHelp AI & Procure-obot fka Awesome-o 2000!</p>
+            <img src="Awesom0 2000.png" style="float: inline-end; height: 100px;" />
+            <h1 class="text-xl font-bold text-center">BEN Helps Support Assistant / Procurobot</h1>
+            <br/>
+            <p class="text-sm text-center text-gray-300"><b>Powered by A.W.E.S.O.M.-O  &nbsp;2000!</b></p>
+
         </header>
 
         <!-- Chat Window -->
@@ -177,7 +180,7 @@
                 bubbleDiv.classList.add('bg-red-200', 'text-red-800', 'border', 'border-red-400');
             }
 
-            bubbleDiv.innerHTML = `<p>${text}</p>`; // Use innerHTML to render potential links or formatted error messages
+            bubbleDiv.innerHTML = text.replace("/n","<br>"); // Use innerHTML to render potential links or formatted error messages
             messageDiv.appendChild(bubbleDiv);
             chatWindow.appendChild(messageDiv);
 

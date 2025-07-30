@@ -183,6 +183,7 @@ namespace FreshServiceTools.Services
                         .FirstOrDefault()?.Body;
 
                     var context = BrowsingContext.New(Configuration.Default);
+                    // ERROR: null is not handled.
                     var document = await context.OpenAsync(req => req.Content(resolution));
                     var elementsToRemove = document.QuerySelectorAll("body :not(a):not(img)");
 
