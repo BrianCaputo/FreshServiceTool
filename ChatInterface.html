@@ -66,7 +66,7 @@
         <div id="typing-indicator" class="p-4 hidden">
             <div class="flex items-center justify-start">
                 <div class="chat-bubble bg-gray-200 text-gray-800 p-3 rounded-lg flex items-center">
-                    <span class="font-bold mr-2">Bot is typing</span>
+                    <span class="font-bold mr-2">Awesom-0 2000 is thinking</span>
                     <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
                     <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s] mx-1"></div>
                     <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
@@ -180,7 +180,7 @@
                 bubbleDiv.classList.add('bg-red-200', 'text-red-800', 'border', 'border-red-400');
             }
 
-            bubbleDiv.innerHTML = text.replace("/n","<br>"); // Use innerHTML to render potential links or formatted error messages
+            bubbleDiv.innerHTML = text;//.replace("/n","<br>"); // Use innerHTML to render potential links or formatted error messages
             messageDiv.appendChild(bubbleDiv);
             chatWindow.appendChild(messageDiv);
 

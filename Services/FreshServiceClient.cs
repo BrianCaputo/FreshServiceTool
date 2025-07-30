@@ -181,23 +181,24 @@ namespace FreshServiceTools.Services
                         .Where(c => !c.Private)
                         .OrderByDescending(c => c.CreatedAt)
                         .FirstOrDefault()?.Body;
-
-                    var context = BrowsingContext.New(Configuration.Default);
-                    // ERROR: null is not handled.
-                    var document = await context.OpenAsync(req => req.Content(resolution));
-                    var elementsToRemove = document.QuerySelectorAll("body :not(a):not(img)");
-
-                    foreach (var element in elementsToRemove)
+                    if (resolution != null)
                     {
-                        // The ToArray() is important to avoid issues with modifying a live list
-                        element.Replace(element.ChildNodes.ToArray());
+                        var context = BrowsingContext.New(Configuration.Default);
+                        // ERROR: null is not handled.
+                        var document = await context.OpenAsync(req => req.Content(resolution));
+                        var elementsToRemove = document.QuerySelectorAll("body :not(a):not(img)");
+
+                        foreach (var element in elementsToRemove)
+                        {
+                            // The ToArray() is important to avoid issues with modifying a live list
+                            element.Replace(element.ChildNodes.ToArray());
+                        }
+
+                        resolution = document.Body?.InnerHtml.Replace(
+                            "Penn only: Click on this link to view your ticket: https://benhelps.upenn.edu/helpdesk/tickets/",
+                            "");
                     }
-
-                    resolution = document.Body?.InnerHtml.Replace(
-                        "Penn only: Click on this link to view your ticket: https://benhelps.upenn.edu/helpdesk/tickets/",
-                        "");
-
-                    contextBuilder.Add(resolution);
+                    contextBuilder.Add(resolution??"");
                 }
                 catch (Exception ex)
                 {
@@ -599,14 +600,17 @@ Related Resolved Tickets (for additional context):
 ---
 
 Please provide a single, synthesized response that:
-1. Addresses the user's question directly, using the article first if available.
+1. Addresses the user's question directly, using the article first if available and providing a BenHelps link if relevant. 
+    Link format - https://benhelps.upenn.edu/helpdesk/tickets/articleID
 2. References relevant information from both sources if applicable.
 3. Suggests actionable next steps.
-4. Maintains a helpful and professional tone.
-5. Removes any sensitive individual information like names and email addresses.
+4. Maintains a helpful and professional tone, but sometimes sound like eric cartman from south park
+5. Removes any sensitive individual and personally identifiable information like names and email addresses.
 6. Includes organizational references, such as Penn Marketplace, if relevant.
 7. Provides a link to the BEN Helps Ticket creation page (https://benhelps.upenn.edu/support/tickets/new) if the user may need further assistance.
+8. Always stay on the topics of proucurement, purchasing, accounts payable and travel expense.  Do not answer questions outside of these topics and politely remind the user you are a procurement AI agent.
 Response:";
+
 
             var response = await ChatService.GetChatMessageContentAsync(prompt);
             return response.Content ?? "I am unable to provide a response at this time.";
